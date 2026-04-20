@@ -61,9 +61,19 @@ export default function Sidebar({
         ))}
       </div>
       <div className="no-drag border-t border-white/[0.06] p-3 text-[11px] text-ink-400">
-        <div className="flex items-center gap-1.5">
-          <span className="inline-block h-1.5 w-1.5 rounded-full bg-emerald-400" />
-          Running locally
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-1.5">
+            <span className="inline-block h-1.5 w-1.5 rounded-full bg-emerald-400" />
+            Running locally
+          </div>
+          <a
+            href="https://x.com/ammaar"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-ink-400/50 transition hover:text-ink-200"
+          >
+            @ammaar
+          </a>
         </div>
       </div>
     </div>

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { AVAILABLE_MODELS, type AgentMode, type ChatMessage, type ToolCall, type StreamChunk } from '@shared/types'
 import gemmaLogoUrl from '../assets/gemma-logo.png'
 import Composer from './Composer'
@@ -27,7 +27,7 @@ function loadConversations(): Conversation[] {
     const raw = localStorage.getItem(STORAGE_KEY)
     if (!raw) return []
     const arr = JSON.parse(raw) as Conversation[]
-    return arr.map((c) => ({ ...c, mode: c.mode ?? 'chat' }))
+    return arr.map((c) => ({ ...c, mode: c.mode ?? 'code' }))
   } catch {
     return []
   }
@@ -41,7 +41,7 @@ function saveConversations(cs: Conversation[]): void {
   }
 }
 
-function newConversation(mode: AgentMode = 'chat'): Conversation {
+function newConversation(mode: AgentMode = 'code'): Conversation {
   return {
     id: `c_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
     title: 'New chat',
@@ -78,7 +78,7 @@ export default function Chat({ model, onSwitchModel }: Props) {
     setConversations((cs) => cs.map((c) => (c.id === activeId ? fn(c) : c)))
   }
 
-  function createConversation(mode: AgentMode = 'chat'): void {
+  function createConversation(mode: AgentMode = 'code'): void {
     const c = newConversation(mode)
     setConversations((cs) => [c, ...cs])
     setActiveId(c.id)
@@ -266,15 +266,68 @@ export default function Chat({ model, onSwitchModel }: Props) {
           />
         </div>
         {canvasVisible && (
-          <div className="anim-slide-right w-[44%] min-w-[360px] max-w-[780px] shrink-0">
-            <Canvas
-              conversationId={activeId}
-              streaming={streaming}
-              onClose={() => updateActive((c) => ({ ...c, canvasOpen: false }))}
-            />
-          </div>
+          <ResizableCanvas
+            conversationId={activeId}
+            streaming={streaming}
+            onClose={() => updateActive((c) => ({ ...c, canvasOpen: false }))}
+          />
         )}
       </div>
+    </div>
+  )
+}
+
+function ResizableCanvas({
+  conversationId,
+  streaming,
+  onClose
+}: {
+  conversationId: string
+  streaming: boolean
+  onClose: () => void
+}) {
+  const [width, setWidth] = useState(520)
+  const dragging = useRef(false)
+  const startX = useRef(0)
+  const startW = useRef(0)
+
+  const onPointerDown = useCallback((e: React.PointerEvent) => {
+    e.preventDefault()
+    dragging.current = true
+    startX.current = e.clientX
+    startW.current = width
+    ;(e.target as HTMLElement).setPointerCapture(e.pointerId)
+  }, [width])
+
+  const onPointerMove = useCallback((e: React.PointerEvent) => {
+    if (!dragging.current) return
+    const delta = startX.current - e.clientX
+    const next = Math.max(320, Math.min(startW.current + delta, 900))
+    setWidth(next)
+  }, [])
+
+  const onPointerUp = useCallback(() => {
+    dragging.current = false
+  }, [])
+
+  return (
+    <div
+      className="anim-slide-right relative shrink-0"
+      style={{ width }}
+    >
+      {/* Drag handle */}
+      <div
+        className="absolute left-0 top-0 z-10 h-full w-1 cursor-col-resize select-none transition-colors hover:bg-white/10 active:bg-white/20"
+        onPointerDown={onPointerDown}
+        onPointerMove={onPointerMove}
+        onPointerUp={onPointerUp}
+        style={{ touchAction: 'none' }}
+      />
+      <Canvas
+        conversationId={conversationId}
+        streaming={streaming}
+        onClose={onClose}
+      />
     </div>
   )
 }

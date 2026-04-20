@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { marked } from 'marked'
 import type { AgentActivity, ChatMessage, ToolCall } from '@shared/types'
+import gemmaLogoUrl from '../assets/gemma-logo.png'
 
 interface Props {
   message: ChatMessage
@@ -64,9 +65,7 @@ export default function Message({
 
   return (
     <div className="group flex gap-3">
-      <div className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-blue-400 via-purple-400 to-pink-400 text-[10px] font-bold text-black">
-        G
-      </div>
+      <img src={gemmaLogoUrl} alt="Gemma" className="mt-0.5 h-7 w-7 shrink-0 rounded-full object-cover" />
       <div className="selectable min-w-0 flex-1">
         {parsed.thinking && (
           <ThinkingBlock content={parsed.thinking} inProgress={parsed.thinkingInProgress} />
